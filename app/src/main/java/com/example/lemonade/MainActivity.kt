@@ -17,6 +17,7 @@ package com.example.lemonade
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
@@ -67,10 +68,11 @@ class MainActivity : AppCompatActivity() {
         setViewElements()
         lemonImage!!.setOnClickListener {
             // TODO: call the method that handles the state when the image is clicked
+            clickLemonImage()
         }
         lemonImage!!.setOnLongClickListener {
             // TODO: replace 'false' with a call to the function that shows the squeeze count
-            false
+            showSnackBar()
         }
     }
 
@@ -111,6 +113,29 @@ class MainActivity : AppCompatActivity() {
 
         // TODO: lastly, before the function terminates we need to set the view elements so that the
         //  UI can reflect the correct state
+
+        when (lemonadeState) {
+            SELECT -> {
+                lemonadeState = SQUEEZE
+                lemonSize = lemonTree.pick()
+                squeezeCount = 0
+            }
+            SQUEEZE -> {
+                squeezeCount = squeezeCount.inc()
+                lemonSize = lemonSize.dec()
+                if (lemonSize == 0) {
+                    lemonadeState = DRINK
+                    lemonSize = -1
+                }
+            }
+            DRINK -> lemonadeState = RESTART
+            RESTART -> lemonadeState = SELECT
+            else -> {
+                Log.d ("STEP","Status does not expected: $lemonadeState")
+            }
+        }
+
+        setViewElements()
     }
 
     /**
@@ -126,6 +151,24 @@ class MainActivity : AppCompatActivity() {
         // TODO: Additionally, for each state, the lemonImage should be set to the corresponding
         //  drawable from the drawable resources. The drawables have the same names as the strings
         //  but remember that they are drawables, not strings.
+        when (lemonadeState) {
+            SELECT -> {
+                textAction.text = getString(R.string.lemon_select)
+                lemonImage?.setImageResource(R.drawable.lemon_tree)
+            }
+            SQUEEZE -> {
+                textAction.text = getString(R.string.lemon_squeeze)
+                lemonImage?.setImageResource(R.drawable.lemon_squeeze)
+            }
+            DRINK -> {
+                textAction.text = getString(R.string.lemon_drink)
+                lemonImage?.setImageResource(R.drawable.lemon_drink)
+            }
+            RESTART -> {
+                textAction.text = getString(R.string.lemon_empty_glass)
+                lemonImage?.setImageResource(R.drawable.lemon_restart)
+            }
+        }
     }
 
     /**
@@ -133,7 +176,7 @@ class MainActivity : AppCompatActivity() {
      *
      * Long clicking the lemon image will show how many times the lemon has been squeezed.
      */
-    private fun showSnackbar(): Boolean {
+    private fun showSnackBar(): Boolean {
         if (lemonadeState != SQUEEZE) {
             return false
         }
